@@ -40,6 +40,10 @@ class BlackjackService:
             aces -= 1
         return total
 
+    def get_card_value(self, card):
+        rank = card[:-1] if len(card) > 2 else card[0]
+        return CARD_VALUES.get(rank, 0)
+
     def show_hand(self, hand):
         return ' '.join(hand)
 
@@ -84,7 +88,7 @@ class BlackjackService:
                 print("Invalid move.")
 
         while self.calculate_hand(dealer_hand) < 17:
-            dealer_hand.append(self.draw_card())
+            dealer_hand.appFend(self.draw_card())
 
         player_total = self.calculate_hand(player_hand)
         dealer_total = self.calculate_hand(dealer_hand)
@@ -99,3 +103,50 @@ class BlackjackService:
             user.adjust_balance(bet)
         else:
             print("You lose.")
+
+    def play_round_gui(self, user, bet):
+        if bet not in BET_AMOUNTS:
+            raise ValueError("Invalid bet amount.")
+        if bet > user.balance:
+            raise ValueError("Not enough balance.")
+
+        user.adjust_balance(-bet)
+        player = [self.draw_card(), self.draw_card()]
+        dealer = [self.draw_card(), self.draw_card()]
+
+        result = f"Your hand: {' '.join(player)} (Total: {self.calculate_hand(player)})\n"
+        result += f"Dealer shows: {dealer[0]}\n"
+
+        if self.calculate_hand(player) == 21:
+            if self.calculate_hand(dealer) == 21:
+                result += "Both have blackjack! It's a draw."
+                user.adjust_balance(bet)
+            else:
+                result += "Blackjack! You win!"
+                user.adjust_balance(int(bet * 2.5))
+            return result
+
+        while self.calculate_hand(player) < 17:
+            player.append(self.draw_card())
+
+        if self.calculate_hand(player) > 21:
+            return result + f"You busted! Final hand: {' '.join(player)}"
+
+        while self.calculate_hand(dealer) < 17:
+            dealer.append(self.draw_card())
+
+        p_total = self.calculate_hand(player)
+        d_total = self.calculate_hand(dealer)
+
+        result += f"Dealer hand: {' '.join(dealer)} (Total: {d_total})\n"
+
+        if d_total > 21 or p_total > d_total:
+            result += "You win!"
+            user.adjust_balance(bet * 2)
+        elif d_total == p_total:
+            result += "Draw."
+            user.adjust_balance(bet)
+        else:
+            result += "You lose."
+
+        return result
