@@ -3,7 +3,6 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
 
-from components.button import create_button
 from models.userManager import UserManager
 from services.blackjackService import BlackjackService
 
